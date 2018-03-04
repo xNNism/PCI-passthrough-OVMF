@@ -1,0 +1,59 @@
+#!/bin/bash
+
+OS_ISO="/mnt/SSD/Qemu_KVM/iso/Win10_1709_English_x64.iso"
+VIRTIO_ISO="/mnt/SSD/Qemu_KVM/iso/virtio-win-0.1.141.iso"
+OVMF_VARS="/usr/share/edk2.git/ovmf-x64/OVMF_VARS-pure-efi.fd"
+OVMF_CODE="/usr/share/edk2.git/ovmf-x64/OVMF_CODE-pure-efi.fd"
+VHD="/mnt/SSD/Qemu_KVM/win.img"
+
+vmname="win10"
+
+if ps -A | grep -q $vmname; then
+echo "$vmname is already running." &
+exit 1
+
+else
+
+# use pulseaudio
+#export QEMU_AUDIO_DRV=pa
+#export QEMU_PA_SAMPLES=8192
+#export QEMU_AUDIO_TIMER_PERIOD=99
+#export QEMU_PA_SERVER=/run/user/1000/pulse/native
+#
+#cp /usr/share/edk2/ovmf/OVMF_VARS.fd /tmp/OVMF_VARS.fd
+
+qemu-system-x86_64 \
+-name $vmname,process=$vmname \
+-machine type=pc-q35-2.11,accel=kvm \
+-cpu host,kvm=off,hv_vendor_id=whatever \
+-smp 8,sockets=1,cores=4,threads=2 \
+-m 8G \
+-rtc clock=host,base=localtime \
+-mem-prealloc \
+-balloon none \
+-serial none \
+-parallel none \
+-device vfio-pci,host=03:00.0,multifunction=on, \
+-device vfio-pci,host=03:00.1 \
+-drive if=pflash,format=raw,readonly,file=$OVMF_VARS \
+-drive if=pflash,format=raw,file=$OVMF_CODE \
+-drive id=disk0,if=virtio,cache=none,format=raw,file=$VHD
+-nographic \
+-vga none \
+
+exit 0
+fi
+
+#-usb -usbdevice host:062a:4101 \
+#-usb -usbdevice host:0c45:7603 \
+#-drive file=$OS_ISO,index=1,media=cdrom \
+#-drive file=$VIRTIO_ISO,index=2,media=cdrom \
+#-display gtk \
+#-vga std \
+# -nographic \
+# -vga none \
+# -soundhw hda \
+#-usb -usbdevice host:0c45:7603 \
+#-usb -usbdevice host:1a81:1701 \
+#-usb -usbdevice host:06a3:f620 \
+#-usb -usbdevice host:0d8c:0102 \
